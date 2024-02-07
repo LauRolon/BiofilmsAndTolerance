@@ -1,5 +1,6 @@
-# The tolerance of <i> Listeria monocytogenes</i> to benzalkonium chloride is increased in multi-species biofilms of environmental microbiota isolated from tree fruit packing facilities.
-Rolon, M.L., Voloshchuk, O., Bartlett, K.V., LaBorde, L.F., Kovac, J. The tolerance of <i>Listeria monocytogenes</i> to benzalkonium chloride is increased in multi-species biofilms of environmental microbiota isolated from tree fruit packing facilities. NPJ Biofilms and Microbiomes [in review]
+# Multi-species biofilms of environmental microbiota isolated from fruit packing facilities promoted tolerance of <i>Listeria monocytogenes</i> to benzalkonium chloride
+Rolon, M.L., Voloshchuk, O., Bartlett, K.V., LaBorde, L.F., Kovac, J. The tolerance of <i>Listeria monocytogenes</i> to benzalkonium chloride is increased in multi-species biofilms of environmental microbiota isolated from tree fruit packing facilities. (2024). Biofilm 7:100177
+https://doi.org/10.1016/j.bioflm.2024.100177
 
 
 ## Data analysis workflow:
