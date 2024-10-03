@@ -5,8 +5,8 @@ https://doi.org/10.1016/j.bioflm.2024.100177
 
 ## Data analysis workflow:
 1. Compositional data analysis of microbiota and mycobiota
-2. Culture-based microbiology data analyses
-3. Whole Genome Sequence workflow
+2. Culture-based microbiology data analyses (biofilm formation, tolerance, MIC)
+4. Whole Genome Sequence workflow
 
 ## Input files
 1. Metadata for amplicon sequence data
