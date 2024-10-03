@@ -1,7 +1,7 @@
 #USDA project
 #Tolerance data analyses
 
-#Last updated: 07/24/2023 MLR
+#Last updated: 10/02/2023 MLR
 
 #Set working directory
 setwd("G:/My Drive/Penn State/Research/File for R/Thesis/Tolerance") 
@@ -12,6 +12,7 @@ library(ggplot2)
 library(svglite)
 library(psych)
 library(agricolae)
+library(dplyr)
 
 #### Biofilm only ####
 #Input data
@@ -19,12 +20,12 @@ bac<-read_excel("Tolerance_BAC_Results_NEW.xlsx", sheet=1, col_names = TRUE)
 
 
 #APC
-bac2<-subset(bac, logAPC!="NA")
-bac2$logAPC<-as.numeric(bac2$logAPC)
+bac2<-subset(bac, logMPN!="NA")
+bac2$logMPN<-as.numeric(bac2$logMPN)
 
 
 #Calculate summary statistics
-stat_bac2<-describeBy(bac2$logAPC, list(bac2$Trt, bac2$Timepoint), mat = TRUE) #Averages all reps by timepoint and treatment
+stat_bac2<-describeBy(bac2$logMPN, list(bac2$Trt, bac2$Timepoint), mat = TRUE) #Averages all reps by timepoint and treatment
 stat_bac2$group2<-as.numeric(stat_bac2$group2)
 stat_bac2 <- stat_bac2[order(stat_bac2$group1),]
 stat_bac2$Number<-c(rep(1,5),rep(2,10),rep(3,5), rep(2,5), rep(3,10), rep(4,5), rep(3,5),rep(4,10), rep(5,5),rep(2,5), rep(3,10), rep(4,5))
@@ -96,7 +97,7 @@ bac_plank<-read_excel("Tolerance_BAC_Results_NEW.xlsx", sheet=2, col_names = TRU
 #APC
 
 #Calculate summary statistics
-stat_bac_plank<-describeBy(bac_plank$logAPC, list(bac_plank$Trt, bac_plank$Timepoint), mat = TRUE) #By facility and treatment
+stat_bac_plank<-describeBy(bac_plank$logMPN, list(bac_plank$Trt, bac_plank$Timepoint), mat = TRUE) #By facility and treatment
 stat_bac_plank$group2<-as.numeric(stat_bac_plank$group2)
 stat_bac_plank <- stat_bac_plank[order(stat_bac_plank$group1),]
 stat_bac_plank$Number<-c(rep(1,5),rep(2,10),rep(3,5), rep(2,5), rep(3,10), rep(4,5), rep(3,5),rep(4,10), rep(5,5),rep(2,5), rep(3,10), rep(4,5))
@@ -170,11 +171,11 @@ bac_both$factorABC <- with(bac_both, interaction(Trt, Timepoint, Form))
 
 
 #APC
-bac_both_2<-subset(bac_both, logAPC!="NA")
-bac_both_2$logAPC<-as.numeric(bac_both_2$logAPC)
+bac_both_2<-subset(bac_both, logMPN!="NA")
+bac_both_2$logMPN<-as.numeric(bac_both_2$logMPN)
 
 #ANOVA for the interaction effect (since I care about each independent variable)
-anova_apc<-aov(logAPC ~ factorABC, data=bac_both_2)
+anova_apc<-aov(logMPN ~ factorABC, data=bac_both_2)
 summary(anova_apc)
 
 
@@ -184,7 +185,7 @@ tukey_apc
 
 
 #Calculate summary statistics
-stat_bac_both_2<-describeBy(bac_both_2$logAPC, list(bac_both_2$Trt, bac_both_2$Timepoint, bac_both_2$Form), mat = TRUE) #By facility and treatment
+stat_bac_both_2<-describeBy(bac_both_2$logMPN, list(bac_both_2$Trt, bac_both_2$Timepoint, bac_both_2$Form), mat = TRUE) #By facility and treatment
 stat_bac_both_2$group2<-as.numeric(stat_bac_both_2$group2)
 stat_bac_both_2 <- stat_bac_both_2[order(stat_bac_both_2$group1),]
 stat_bac_both_2$Number<-c(rep(1,10),rep(2,20),rep(3,10), rep(2,10), rep(3,20), rep(4,10), rep(3,10),rep(4,20), rep(5,10),rep(2,10), rep(3,20), rep(4,10))
@@ -215,170 +216,288 @@ ggsave("Tolerance_APC_Both.png", plot=apc_bac_both, device="png", width=10, heig
 ggsave("Tolerance_APC_Both.svg", plot=apc_bac_both, device="svg", width=10, height=8, units="in", dpi=600)
 
 #Anova by treatment
-#Subset by treatment
-T1<-subset(bac_both_2, Code=="T1" )
-T6<-subset(bac_both_2, Code=="T6" )
-T7<-subset(bac_both_2, Code=="T7" )
-T8<-subset(bac_both_2, Code=="T8" )
-T9<-subset(bac_both_2, Code=="T9" )
-T10<-subset(bac_both_2, Code=="T10" )
-T11<-subset(bac_both_2, Code=="T11" )
-T12<-subset(bac_both_2, Code=="T12" )
-T13<-subset(bac_both_2, Code=="T13" )
-T14<-subset(bac_both_2, Code=="T14" )
-T15<-subset(bac_both_2, Code=="T15" )
-T16<-subset(bac_both_2, Code=="T16" )
-T17<-subset(bac_both_2, Code=="T17" )
-T18<-subset(bac_both_2, Code=="T18" )
-T19<-subset(bac_both_2, Code=="T19" )
-T20<-subset(bac_both_2, Code=="T20" )
+#Subset by treatment and form (i.e., plank and biofilm)
+T1_biofilm<-subset(bac_both_2, Code=="T1" & Form=="Biofilm")
+T6_biofilm<-subset(bac_both_2, Code=="T6" & Form=="Biofilm")
+T7_biofilm<-subset(bac_both_2, Code=="T7" & Form=="Biofilm")
+T8_biofilm<-subset(bac_both_2, Code=="T8" & Form=="Biofilm")
+T9_biofilm<-subset(bac_both_2, Code=="T9" & Form=="Biofilm")
+T10_biofilm<-subset(bac_both_2, Code=="T10" & Form=="Biofilm")
+T11_biofilm<-subset(bac_both_2, Code=="T11" & Form=="Biofilm")
+T12_biofilm<-subset(bac_both_2, Code=="T12" & Form=="Biofilm")
+T13_biofilm<-subset(bac_both_2, Code=="T13" & Form=="Biofilm")
+T14_biofilm<-subset(bac_both_2, Code=="T14" & Form=="Biofilm")
+T15_biofilm<-subset(bac_both_2, Code=="T15" & Form=="Biofilm")
+T16_biofilm<-subset(bac_both_2, Code=="T16" & Form=="Biofilm")
+T17_biofilm<-subset(bac_both_2, Code=="T17" & Form=="Biofilm")
+T18_biofilm<-subset(bac_both_2, Code=="T18" & Form=="Biofilm")
+T19_biofilm<-subset(bac_both_2, Code=="T19" & Form=="Biofilm")
+T20_biofilm<-subset(bac_both_2, Code=="T20" & Form=="Biofilm")
+
+T1_plank<-subset(bac_both_2, Code=="T1" & Form=="Planktonic")
+T6_plank<-subset(bac_both_2, Code=="T6" & Form=="Planktonic")
+T7_plank<-subset(bac_both_2, Code=="T7" & Form=="Planktonic")
+T8_plank<-subset(bac_both_2, Code=="T8" & Form=="Planktonic")
+T9_plank<-subset(bac_both_2, Code=="T9" & Form=="Planktonic")
+T10_plank<-subset(bac_both_2, Code=="T10" & Form=="Planktonic")
+T11_plank<-subset(bac_both_2, Code=="T11" & Form=="Planktonic")
+T12_plank<-subset(bac_both_2, Code=="T12" & Form=="Planktonic")
+T13_plank<-subset(bac_both_2, Code=="T13" & Form=="Planktonic")
+T14_plank<-subset(bac_both_2, Code=="T14" & Form=="Planktonic")
+T15_plank<-subset(bac_both_2, Code=="T15" & Form=="Planktonic")
+T16_plank<-subset(bac_both_2, Code=="T16" & Form=="Planktonic")
+T17_plank<-subset(bac_both_2, Code=="T17" & Form=="Planktonic")
+T18_plank<-subset(bac_both_2, Code=="T18" & Form=="Planktonic")
+T19_plank<-subset(bac_both_2, Code=="T19" & Form=="Planktonic")
+T20_plank<-subset(bac_both_2, Code=="T20" & Form=="Planktonic")
 
 
-#ANOVA for the interaction effect (since I care about each independent variable)
-anova_apc_T1<-aov(logAPC ~ factorABC, data=T1)
-summary(anova_apc_T1)
+#ANOVA
+#Biofilm
+anova_apc_T1_biofilm<-aov(logMPN ~ Timepoint, data=T1_biofilm)
+summary(anova_apc_T1_biofilm) #p=0.00964
 
-anova_apc_T6<-aov(logAPC ~ factorABC, data=T6)
-summary(anova_apc_T6)
+anova_apc_T6_biofilm<-aov(logMPN ~ Timepoint, data=T6_biofilm)
+summary(anova_apc_T6_biofilm)#p=0.669
 
-anova_apc_T7<-aov(logAPC ~ factorABC, data=T7)
-summary(anova_apc_T7)
+anova_apc_T7_biofilm<-aov(logMPN ~ Timepoint, data=T7_biofilm)
+summary(anova_apc_T7_biofilm) #0.136
 
-anova_apc_T8<-aov(logAPC ~ factorABC, data=T8)
-summary(anova_apc_T8)
+anova_apc_T8_biofilm<-aov(logMPN ~ Timepoint, data=T8_biofilm)
+summary(anova_apc_T8_biofilm)#p=0.72
 
-anova_apc_T9<-aov(logAPC ~ factorABC, data=T9)
-summary(anova_apc_T9)
+anova_apc_T9_biofilm<-aov(logMPN ~ Timepoint, data=T9_biofilm)
+summary(anova_apc_T9_biofilm) #p=0.0139 
 
-anova_apc_T10<-aov(logAPC ~ factorABC, data=T10)
-summary(anova_apc_T10)
+anova_apc_T10_biofilm<-aov(logMPN ~ Timepoint, data=T10_biofilm)
+summary(anova_apc_T10_biofilm) #p= 0.734
 
-anova_apc_T11<-aov(logAPC ~ factorABC, data=T11)
-summary(anova_apc_T11)
+anova_apc_T11_biofilm<-aov(logMPN ~ Timepoint, data=T11_biofilm)
+summary(anova_apc_T11_biofilm) #p=0.84
 
-anova_apc_T12<-aov(logAPC ~ factorABC, data=T12)
-summary(anova_apc_T12)
+anova_apc_T12_biofilm<-aov(logMPN ~ Timepoint, data=T12_biofilm)
+summary(anova_apc_T12_biofilm) #p=0.484
 
-anova_apc_T13<-aov(logAPC ~ factorABC, data=T13)
-summary(anova_apc_T13)
+anova_apc_T13_biofilm<-aov(logMPN ~ Timepoint, data=T13_biofilm)
+summary(anova_apc_T13_biofilm) #p=0.719
 
-anova_apc_T14<-aov(logAPC ~ factorABC, data=T14)
-summary(anova_apc_T14)
+anova_apc_T14_biofilm<-aov(logMPN ~ Timepoint, data=T14_biofilm)
+summary(anova_apc_T14_biofilm) #p=0.298
 
-anova_apc_T15<-aov(logAPC ~ factorABC, data=T15)
-summary(anova_apc_T15)
+anova_apc_T15_biofilm<-aov(logMPN ~ Timepoint, data=T15_biofilm)
+summary(anova_apc_T15_biofilm) #p=0.537
 
-anova_apc_T16<-aov(logAPC ~ factorABC, data=T16)
-summary(anova_apc_T16)
+anova_apc_T16_biofilm<-aov(logMPN ~ Timepoint, data=T16_biofilm)
+summary(anova_apc_T16_biofilm) #p=0.83
 
-anova_apc_T17<-aov(logAPC ~ factorABC, data=T17)
-summary(anova_apc_T17)
+anova_apc_T17_biofilm<-aov(logMPN ~ Timepoint, data=T17_biofilm)
+summary(anova_apc_T17_biofilm) # 0.206
 
-anova_apc_T18<-aov(logAPC ~ factorABC, data=T18)
-summary(anova_apc_T18)
+anova_apc_T18_biofilm<-aov(logMPN ~ Timepoint, data=T18_biofilm)
+summary(anova_apc_T18_biofilm) #p=0.961
 
-anova_apc_T19<-aov(logAPC ~ factorABC, data=T19)
-summary(anova_apc_T19)
+anova_apc_T19_biofilm<-aov(logMPN ~ Timepoint, data=T19_biofilm)
+summary(anova_apc_T19_biofilm) #p=0.24
 
-anova_apc_T20<-aov(logAPC ~ factorABC, data=T20)
-summary(anova_apc_T20)
+anova_apc_T20_biofilm<-aov(logMPN ~ Timepoint, data=T20_biofilm)
+summary(anova_apc_T20_biofilm) #p= 0.43
+
+#Planktonic
+anova_apc_T1_plank<-aov(logMPN ~ Timepoint, data=T1_plank)
+summary(anova_apc_T1_plank) #p=0.000684 
+
+anova_apc_T6_plank<-aov(logMPN ~ Timepoint, data=T6_plank)
+summary(anova_apc_T6_plank) #p=0.00766
+
+anova_apc_T7_plank<-aov(logMPN ~ Timepoint, data=T7_plank)
+summary(anova_apc_T7_plank) #p=3.82e-05
+
+anova_apc_T8_plank<-aov(logMPN ~ Timepoint, data=T8_plank)
+summary(anova_apc_T8_plank) #p=0.000311 
+
+anova_apc_T9_plank<-aov(logMPN ~ Timepoint, data=T9_plank)
+summary(anova_apc_T9_plank) #p=0.00411 
+
+anova_apc_T10_plank<-aov(logMPN ~ Timepoint, data=T10_plank)
+summary(anova_apc_T10_plank) #p=0.0176
+
+anova_apc_T11_plank<-aov(logMPN ~ Timepoint, data=T11_plank)
+summary(anova_apc_T11_plank) #p=0.0207
+
+anova_apc_T12_plank<-aov(logMPN ~ Timepoint, data=T12_plank)
+summary(anova_apc_T12_plank) #p=0.0179
+
+anova_apc_T13_plank<-aov(logMPN ~ Timepoint, data=T13_plank)
+summary(anova_apc_T13_plank) #p= 0.000446 
+
+anova_apc_T14_plank<-aov(logMPN ~ Timepoint, data=T14_plank)
+summary(anova_apc_T14_plank) #p=8.22e-05
+
+anova_apc_T15_plank<-aov(logMPN ~ Timepoint, data=T15_plank)
+summary(anova_apc_T15_plank) #p=0.0011
+
+anova_apc_T16_plank<-aov(logMPN ~ Timepoint, data=T16_plank)
+summary(anova_apc_T16_plank) #p=0.0206
+
+anova_apc_T17_plank<-aov(logMPN ~ Timepoint, data=T17_plank)
+summary(anova_apc_T17_plank) #p=0.0147 
+
+anova_apc_T18_plank<-aov(logMPN ~ Timepoint, data=T18_plank)
+summary(anova_apc_T18_plank) #p=0.0245
+
+anova_apc_T19_plank<-aov(logMPN ~ Timepoint, data=T19_plank)
+summary(anova_apc_T19_plank) #p=0.0045 
+
+anova_apc_T20_plank<-aov(logMPN ~ Timepoint, data=T20_plank)
+summary(anova_apc_T20_plank) #p=0.0282
 
 #tukey test
-tukey_apc_T1<-HSD.test(anova_apc_T1, trt="factorABC") 
-tukey_apc_T1
+#Biofilm
+tukey_apc_T1_biofilm<-HSD.test(anova_apc_T1_biofilm, trt="Timepoint") 
+tukey_apc_T1_biofilm
 
-tukey_apc_T6<-HSD.test(anova_apc_T6, trt="factorABC") 
-tukey_apc_T6
+tukey_apc_T6_biofilm<-HSD.test(anova_apc_T6_biofilm, trt="Timepoint") 
+tukey_apc_T6_biofilm
 
-tukey_apc_T7<-HSD.test(anova_apc_T7, trt="factorABC") 
-tukey_apc_T7
+tukey_apc_T7_biofilm<-HSD.test(anova_apc_T7_biofilm, trt="Timepoint") 
+tukey_apc_T7_biofilm
 
-tukey_apc_T8<-HSD.test(anova_apc_T8, trt="factorABC") 
-tukey_apc_T8
+tukey_apc_T8_biofilm<-HSD.test(anova_apc_T8_biofilm, trt="Timepoint") 
+tukey_apc_T8_biofilm
 
-tukey_apc_T9<-HSD.test(anova_apc_T9, trt="factorABC") 
-tukey_apc_T9
+tukey_apc_T9_biofilm<-HSD.test(anova_apc_T9_biofilm, trt="Timepoint") 
+tukey_apc_T9_biofilm
 
-tukey_apc_T1<-HSD.test(anova_apc_T1, trt="factorABC") 
-tukey_apc_T1
+tukey_apc_T10_biofilm<-HSD.test(anova_apc_T10_biofilm, trt="Timepoint") 
+tukey_apc_T10_biofilm
 
-tukey_apc_T10<-HSD.test(anova_apc_T10, trt="factorABC") 
-tukey_apc_T10
+tukey_apc_T11_biofilm<-HSD.test(anova_apc_T11_biofilm, trt="Timepoint") 
+tukey_apc_T11_biofilm
 
-tukey_apc_T11<-HSD.test(anova_apc_T11, trt="factorABC") 
-tukey_apc_T11
+tukey_apc_T12_biofilm<-HSD.test(anova_apc_T12_biofilm, trt="Timepoint") 
+tukey_apc_T12_biofilm
 
-tukey_apc_T12<-HSD.test(anova_apc_T12, trt="factorABC") 
-tukey_apc_T12
+tukey_apc_T13_biofilm<-HSD.test(anova_apc_T13_biofilm, trt="Timepoint") 
+tukey_apc_T13_biofilm
 
-tukey_apc_T13<-HSD.test(anova_apc_T13, trt="factorABC") 
-tukey_apc_T13
+tukey_apc_T14_biofilm<-HSD.test(anova_apc_T14_biofilm, trt="Timepoint") 
+tukey_apc_T14_biofilm
 
-tukey_apc_T14<-HSD.test(anova_apc_T14, trt="factorABC") 
-tukey_apc_T14
+tukey_apc_T15_biofilm<-HSD.test(anova_apc_T15_biofilm, trt="Timepoint") 
+tukey_apc_T15_biofilm
 
-tukey_apc_T15<-HSD.test(anova_apc_T15, trt="factorABC") 
-tukey_apc_T15
+tukey_apc_T16_biofilm<-HSD.test(anova_apc_T16_biofilm, trt="Timepoint") 
+tukey_apc_T16_biofilm
 
-tukey_apc_T16<-HSD.test(anova_apc_T16, trt="factorABC") 
-tukey_apc_T16
+tukey_apc_T17_biofilm<-HSD.test(anova_apc_T17_biofilm, trt="Timepoint") 
+tukey_apc_T17_biofilm
 
-tukey_apc_T17<-HSD.test(anova_apc_T17, trt="factorABC") 
-tukey_apc_T17
+tukey_apc_T18_biofilm<-HSD.test(anova_apc_T18_biofilm, trt="Timepoint") 
+tukey_apc_T18_biofilm
 
-tukey_apc_T18<-HSD.test(anova_apc_T18, trt="factorABC") 
-tukey_apc_T18
+tukey_apc_T19_biofilm<-HSD.test(anova_apc_T19_biofilm, trt="Timepoint") 
+tukey_apc_T19_biofilm
 
-tukey_apc_T19<-HSD.test(anova_apc_T19, trt="factorABC") 
-tukey_apc_T19
+tukey_apc_T20_biofilm<-HSD.test(anova_apc_T20_biofilm, trt="Timepoint") 
+tukey_apc_T20_biofilm
 
-tukey_apc_T20<-HSD.test(anova_apc_T20, trt="factorABC") 
-tukey_apc_T20
+#Planktonic
+tukey_apc_T1_plank<-HSD.test(anova_apc_T1_plank, trt="Timepoint") 
+tukey_apc_T1_plank
 
-tukey_groups_apc<-bind_rows(tukey_apc_T1$groups, tukey_apc_T6$groups,tukey_apc_T7$groups,tukey_apc_T8$groups,
-                            tukey_apc_T9$groups,tukey_apc_T10$groups,tukey_apc_T11$groups,tukey_apc_T12$groups,
-                            tukey_apc_T13$groups,tukey_apc_T14$groups,tukey_apc_T15$groups,tukey_apc_T16$groups,
-                            tukey_apc_T17$groups,tukey_apc_T18$groups,tukey_apc_T19$groups,tukey_apc_T20$groups)
+tukey_apc_T6_plank<-HSD.test(anova_apc_T6_plank, trt="Timepoint") 
+tukey_apc_T6_plank
 
-tukey_groups_apc<-tukey_groups_apc[ order(row.names(tukey_groups_apc)), ]
-tukey_groups_apc$Code<-c(rep("L+F",9),rep("L+M+F",9),rep("L+M",9),rep("L+P",9),rep("L+P+F",9),rep("L+P+M",9),
-                         rep("L+P+M+F",9),rep("L+P+X",9),rep("L+P+X+F",9),rep("L+P+X+M+F",9),
-                         rep("L+P+X+M",9),rep("L+X+F",9),rep("L+X+M",9),rep("L+X+M+F",9),rep("L+X",9),rep("L",9))
-tukey_groups_apc$Timepoint<-rep(c(0.25,0.5,0.5,0,0,1,1,2,2),16)
-tukey_groups_apc$Form<-rep(c(rep(c("Planktonic","Biofilm"),4),"Planktonic"),16)
+tukey_apc_T7_plank<-HSD.test(anova_apc_T7_plank, trt="Timepoint") 
+tukey_apc_T7_plank
 
+tukey_apc_T8_plank<-HSD.test(anova_apc_T8_plank, trt="Timepoint") 
+tukey_apc_T8_plank
 
-tukey_means_apc<-bind_rows(tukey_apc_T9$means,tukey_apc_T15$means,tukey_apc_T8$means,tukey_apc_T6$means,
-                           tukey_apc_T12$means,tukey_apc_T11$means,tukey_apc_T18$means,tukey_apc_T10$means,
-                           tukey_apc_T17$means,tukey_apc_T20$means,tukey_apc_T16$means,tukey_apc_T14$means,
-                           tukey_apc_T13$means,tukey_apc_T19$means,tukey_apc_T7$means,tukey_apc_T1$means)
+tukey_apc_T9_plank<-HSD.test(anova_apc_T9_plank, trt="Timepoint") 
+tukey_apc_T9_plank
 
-tukey_apc_sum<-bind_cols(tukey_groups_apc,tukey_means_apc)
+tukey_apc_T10_plank<-HSD.test(anova_apc_T10_plank, trt="Timepoint") 
+tukey_apc_T10_plank
 
+tukey_apc_T11_plank<-HSD.test(anova_apc_T11_plank, trt="Timepoint") 
+tukey_apc_T11_plank
 
-#plot apc results with tukey letters
-apc_bac_tukey<-ggplot(tukey_apc_sum, aes(x=Timepoint, y=`logAPC...1`, group=interaction(Form,Code), color=Code, linetype=Form, shape=Form))+
-  geom_point()+geom_line()+facet_wrap(vars(Code))+
-  geom_text(aes(label=groups), position=position_dodge(width=0), vjust=-1)+
-  geom_errorbar(aes(ymin=`logAPC...1`-se, ymax=`logAPC...1`+se), width=.07, linetype=1)+
-  geom_hline(yintercept = 0.9, color="grey80", linetype=2)+
-  scale_x_continuous(limits = c(-0.15,2.5), breaks = c(0,0.5,1,1.5,2,2.5))+
-  scale_y_continuous(limits = c(0,10), breaks = c(0,2,4,6,8,10), minor_breaks = c(1,3,5,7,9))+
-  theme(plot.margin=margin(t=0.5, b=0.5, l=0.5, r=0.5, unit = 'in'))+
-  theme(axis.text = element_text(color='black', size=13), axis.ticks = element_line(color='black')) +
-  theme(axis.title = element_text(size=13,color='black')) +
-  theme(panel.background = element_rect(fill='white', color = NA),
-        plot.background = element_rect(fill = 'white',color = NA), 
-        panel.border = element_rect(color='black',fill = NA,size=1))+
-  #theme(panel.grid.major = element_line(color = "grey50"), panel.grid.minor.y = element_line(color = "grey50"))+
-  theme(strip.background= element_blank(), strip.text = element_text(size=15),
-        panel.border = element_rect(color="black", fill=NA))+
-  theme(legend.position = "bottom")+
-  ylab("log10 CFU/peg biofilms or log 10 CFU/ml planktonic")+xlab("Time (hours)")+
-  ggtitle("Total count - Tolerance Both")+theme(plot.title = element_text(hjust = 0.5, face = 'bold'))
-apc_bac_tukey
-ggsave("Tolerance_apc_Both_Tukey.png", plot=apc_bac_tukey, device="png", width=10, height=8, units="in", dpi=600)
-ggsave("Tolerance_apc_Both_Tukey.svg", plot=apc_bac_tukey, device="svg", width=10, height=8, units="in", dpi=600)
+tukey_apc_T12_plank<-HSD.test(anova_apc_T12_plank, trt="Timepoint") 
+tukey_apc_T12_plank
+
+tukey_apc_T13_plank<-HSD.test(anova_apc_T13_plank, trt="Timepoint") 
+tukey_apc_T13_plank
+
+tukey_apc_T14_plank<-HSD.test(anova_apc_T14_plank, trt="Timepoint") 
+tukey_apc_T14_plank
+
+tukey_apc_T15_plank<-HSD.test(anova_apc_T15_plank, trt="Timepoint") 
+tukey_apc_T15_plank
+
+tukey_apc_T16_plank<-HSD.test(anova_apc_T16_plank, trt="Timepoint") 
+tukey_apc_T16_plank
+
+tukey_apc_T17_plank<-HSD.test(anova_apc_T17_plank, trt="Timepoint") 
+tukey_apc_T17_plank
+
+tukey_apc_T18_plank<-HSD.test(anova_apc_T18_plank, trt="Timepoint") 
+tukey_apc_T18_plank
+
+tukey_apc_T19_plank<-HSD.test(anova_apc_T19_plank, trt="Timepoint") 
+tukey_apc_T19_plank
+
+tukey_apc_T20_plank<-HSD.test(anova_apc_T20_plank, trt="Timepoint") 
+tukey_apc_T20_plank
+
+# tukey_groups_apc<-bind_rows(tukey_apc_T1_biofilm$groups, tukey_apc_T6_biofilm$groups,tukey_apc_T7_biofilm$groups,tukey_apc_T8_biofilm$groups,
+#                             tukey_apc_T9_biofilm$groups,tukey_apc_T10_biofilm$groups,tukey_apc_T11_biofilm$groups,tukey_apc_T12_biofilm$groups,
+#                             tukey_apc_T13_biofilm$groups,tukey_apc_T14_biofilm$groups,tukey_apc_T15_biofilm$groups,tukey_apc_T16_biofilm$groups,
+#                             tukey_apc_T17_biofilm$groups,tukey_apc_T18_biofilm$groups,tukey_apc_T19_biofilm$groups,tukey_apc_T20_biofilm$groups,
+#                             tukey_apc_T1_plank$groups, tukey_apc_T6_plank$groups,tukey_apc_T7_plank$groups,tukey_apc_T8_plank$groups,
+#                             tukey_apc_T9_plank$groups,tukey_apc_T10_plank$groups,tukey_apc_T11_plank$groups,tukey_apc_T12_plank$groups,
+#                             tukey_apc_T13_plank$groups,tukey_apc_T14_plank$groups,tukey_apc_T15_plank$groups,tukey_apc_T16_plank$groups,
+#                             tukey_apc_T17_plank$groups,tukey_apc_T18_plank$groups,tukey_apc_T19_plank$groups,tukey_apc_T20_plank$groups)
+# 
+# tukey_groups_apc<-tukey_groups_apc[ order(row.names(tukey_groups_apc)), ]
+# tukey_groups_apc$Code<-c(rep("L+F",9),rep("L+M+F",9),rep("L+M",9),rep("L+P",9),rep("L+P+F",9),rep("L+P+M",9),
+#                          rep("L+P+M+F",9),rep("L+P+X",9),rep("L+P+X+F",9),rep("L+P+X+M+F",9),
+#                          rep("L+P+X+M",9),rep("L+X+F",9),rep("L+X+M",9),rep("L+X+M+F",9),rep("L+X",9),rep("L",9))
+# tukey_groups_apc$Timepoint<-rep(c(0.25,0.5,0.5,0,0,1,1,2,2),16)
+# tukey_groups_apc$Form<-rep(c(rep(c("Planktonic","Biofilm"),4),"Planktonic"),16)
+# 
+# 
+# tukey_means_apc<-bind_rows(tukey_apc_T9$means,tukey_apc_T15$means,tukey_apc_T8$means,tukey_apc_T6$means,
+#                            tukey_apc_T12$means,tukey_apc_T11$means,tukey_apc_T18$means,tukey_apc_T10$means,
+#                            tukey_apc_T17$means,tukey_apc_T20$means,tukey_apc_T16$means,tukey_apc_T14$means,
+#                            tukey_apc_T13$means,tukey_apc_T19$means,tukey_apc_T7$means,tukey_apc_T1$means)
+# 
+# tukey_apc_sum<-bind_cols(tukey_groups_apc,tukey_means_apc)
+
+# 
+# #plot apc results with tukey letters
+# apc_bac_tukey<-ggplot(tukey_apc_sum, aes(x=Timepoint, y=`logMPN...1`, group=interaction(Form,Code), color=Code, linetype=Form, shape=Form))+
+#   geom_point()+geom_line()+facet_wrap(vars(Code))+
+#   geom_text(aes(label=groups), position=position_dodge(width=0), vjust=-1)+
+#   geom_errorbar(aes(ymin=`logMPN...1`-se, ymax=`logMPN...1`+se), width=.07, linetype=1)+
+#   geom_hline(yintercept = 0.9, color="grey80", linetype=2)+
+#   scale_x_continuous(limits = c(-0.15,2.5), breaks = c(0,0.5,1,1.5,2,2.5))+
+#   scale_y_continuous(limits = c(0,10), breaks = c(0,2,4,6,8,10), minor_breaks = c(1,3,5,7,9))+
+#   theme(plot.margin=margin(t=0.5, b=0.5, l=0.5, r=0.5, unit = 'in'))+
+#   theme(axis.text = element_text(color='black', size=13), axis.ticks = element_line(color='black')) +
+#   theme(axis.title = element_text(size=13,color='black')) +
+#   theme(panel.background = element_rect(fill='white', color = NA),
+#         plot.background = element_rect(fill = 'white',color = NA), 
+#         panel.border = element_rect(color='black',fill = NA,size=1))+
+#   #theme(panel.grid.major = element_line(color = "grey50"), panel.grid.minor.y = element_line(color = "grey50"))+
+#   theme(strip.background= element_blank(), strip.text = element_text(size=15),
+#         panel.border = element_rect(color="black", fill=NA))+
+#   theme(legend.position = "bottom")+
+#   ylab("log10 CFU/peg biofilms or log 10 CFU/ml planktonic")+xlab("Time (hours)")+
+#   ggtitle("Total count - Tolerance Both")+theme(plot.title = element_text(hjust = 0.5, face = 'bold'))
+# apc_bac_tukey
+# ggsave("Tolerance_apc_Both_Tukey.png", plot=apc_bac_tukey, device="png", width=10, height=8, units="in", dpi=600)
+# ggsave("Tolerance_apc_Both_Tukey.svg", plot=apc_bac_tukey, device="svg", width=10, height=8, units="in", dpi=600)
 
 
 
@@ -424,172 +543,287 @@ mpn_bac_both
 ggsave("Tolerance_MPN_Both.png", plot=mpn_bac_both, device="png", width=10, height=8, units="in", dpi=600)
 ggsave("Tolerance_MPN_Both.svg", plot=mpn_bac_both, device="svg", width=10, height=8, units="in", dpi=600)
 
-#Anova by treatment
+#Anova by treatment and form
 #Subset by treatment
-T1<-subset(bac_both, Code=="T1" )
-T6<-subset(bac_both, Code=="T6" )
-T7<-subset(bac_both, Code=="T7" )
-T8<-subset(bac_both, Code=="T8" )
-T9<-subset(bac_both, Code=="T9" )
-T10<-subset(bac_both, Code=="T10" )
-T11<-subset(bac_both, Code=="T11" )
-T12<-subset(bac_both, Code=="T12" )
-T13<-subset(bac_both, Code=="T13" )
-T14<-subset(bac_both, Code=="T14" )
-T15<-subset(bac_both, Code=="T15" )
-T16<-subset(bac_both, Code=="T16" )
-T17<-subset(bac_both, Code=="T17" )
-T18<-subset(bac_both, Code=="T18" )
-T19<-subset(bac_both, Code=="T19" )
-T20<-subset(bac_both, Code=="T20" )
+#Subset by treatment and form (i.e., plank and biofilm)
+T1_biofilm<-subset(bac_both, Code=="T1" & Form=="Biofilm")
+T6_biofilm<-subset(bac_both, Code=="T6" & Form=="Biofilm")
+T7_biofilm<-subset(bac_both, Code=="T7" & Form=="Biofilm")
+T8_biofilm<-subset(bac_both, Code=="T8" & Form=="Biofilm")
+T9_biofilm<-subset(bac_both, Code=="T9" & Form=="Biofilm")
+T10_biofilm<-subset(bac_both, Code=="T10" & Form=="Biofilm")
+T11_biofilm<-subset(bac_both, Code=="T11" & Form=="Biofilm")
+T12_biofilm<-subset(bac_both, Code=="T12" & Form=="Biofilm")
+T13_biofilm<-subset(bac_both, Code=="T13" & Form=="Biofilm")
+T14_biofilm<-subset(bac_both, Code=="T14" & Form=="Biofilm")
+T15_biofilm<-subset(bac_both, Code=="T15" & Form=="Biofilm")
+T16_biofilm<-subset(bac_both, Code=="T16" & Form=="Biofilm")
+T17_biofilm<-subset(bac_both, Code=="T17" & Form=="Biofilm")
+T18_biofilm<-subset(bac_both, Code=="T18" & Form=="Biofilm")
+T19_biofilm<-subset(bac_both, Code=="T19" & Form=="Biofilm")
+T20_biofilm<-subset(bac_both, Code=="T20" & Form=="Biofilm")
+
+T1_plank<-subset(bac_both, Code=="T1" & Form=="Planktonic")
+T6_plank<-subset(bac_both, Code=="T6" & Form=="Planktonic")
+T7_plank<-subset(bac_both, Code=="T7" & Form=="Planktonic")
+T8_plank<-subset(bac_both, Code=="T8" & Form=="Planktonic")
+T9_plank<-subset(bac_both, Code=="T9" & Form=="Planktonic")
+T10_plank<-subset(bac_both, Code=="T10" & Form=="Planktonic")
+T11_plank<-subset(bac_both, Code=="T11" & Form=="Planktonic")
+T12_plank<-subset(bac_both, Code=="T12" & Form=="Planktonic")
+T13_plank<-subset(bac_both, Code=="T13" & Form=="Planktonic")
+T14_plank<-subset(bac_both, Code=="T14" & Form=="Planktonic")
+T15_plank<-subset(bac_both, Code=="T15" & Form=="Planktonic")
+T16_plank<-subset(bac_both, Code=="T16" & Form=="Planktonic")
+T17_plank<-subset(bac_both, Code=="T17" & Form=="Planktonic")
+T18_plank<-subset(bac_both, Code=="T18" & Form=="Planktonic")
+T19_plank<-subset(bac_both, Code=="T19" & Form=="Planktonic")
+T20_plank<-subset(bac_both, Code=="T20" & Form=="Planktonic")
 
 
-#ANOVA for the interaction effect (since I care about each independent variable)
-anova_mpn_T1<-aov(logMPN ~ factorABC, data=T1)
-summary(anova_mpn_T1)
+#ANOVA
+#Biofilm
+anova_lm_T1_biofilm<-aov(logMPN ~ Timepoint, data=T1_biofilm)
+summary(anova_lm_T1_biofilm) #p=0.00247
 
-anova_mpn_T6<-aov(logMPN ~ factorABC, data=T6)
-summary(anova_mpn_T6)
+anova_lm_T6_biofilm<-aov(logMPN ~ Timepoint, data=T6_biofilm)
+summary(anova_lm_T6_biofilm)#p= 0.329
 
-anova_mpn_T7<-aov(logMPN ~ factorABC, data=T7)
-summary(anova_mpn_T7)
+anova_lm_T7_biofilm<-aov(logMPN ~ Timepoint, data=T7_biofilm)
+summary(anova_lm_T7_biofilm) # p=0.822
 
-anova_mpn_T8<-aov(logMPN ~ factorABC, data=T8)
-summary(anova_mpn_T8)
+anova_lm_T8_biofilm<-aov(logMPN ~ Timepoint, data=T8_biofilm)
+summary(anova_lm_T8_biofilm)#p=0.0531
 
-anova_mpn_T9<-aov(logMPN ~ factorABC, data=T9)
-summary(anova_mpn_T9)
+anova_lm_T9_biofilm<-aov(logMPN ~ Timepoint, data=T9_biofilm)
+summary(anova_lm_T9_biofilm) #p=0.00545
 
-anova_mpn_T10<-aov(logMPN ~ factorABC, data=T10)
-summary(anova_mpn_T10)
+anova_lm_T10_biofilm<-aov(logMPN ~ Timepoint, data=T10_biofilm)
+summary(anova_lm_T10_biofilm) #p= 0.25
 
-anova_mpn_T11<-aov(logMPN ~ factorABC, data=T11)
-summary(anova_mpn_T11)
+anova_lm_T11_biofilm<-aov(logMPN ~ Timepoint, data=T11_biofilm)
+summary(anova_lm_T11_biofilm) #p=0.332
 
-anova_mpn_T12<-aov(logMPN ~ factorABC, data=T12)
-summary(anova_mpn_T12)
+anova_lm_T12_biofilm<-aov(logMPN ~ Timepoint, data=T12_biofilm)
+summary(anova_lm_T12_biofilm) #p=0.108
 
-anova_mpn_T13<-aov(logMPN ~ factorABC, data=T13)
-summary(anova_mpn_T13)
+anova_lm_T13_biofilm<-aov(logMPN ~ Timepoint, data=T13_biofilm)
+summary(anova_lm_T13_biofilm) #p=0.16
 
-anova_mpn_T14<-aov(logMPN ~ factorABC, data=T14)
-summary(anova_mpn_T14)
+anova_lm_T14_biofilm<-aov(logMPN ~ Timepoint, data=T14_biofilm)
+summary(anova_lm_T14_biofilm) #p=0.0862 
 
-anova_mpn_T15<-aov(logMPN ~ factorABC, data=T15)
-summary(anova_mpn_T15)
+anova_lm_T15_biofilm<-aov(logMPN ~ Timepoint, data=T15_biofilm)
+summary(anova_lm_T15_biofilm) #p=0.207
 
-anova_mpn_T16<-aov(logMPN ~ factorABC, data=T16)
-summary(anova_mpn_T16)
+anova_lm_T16_biofilm<-aov(logMPN ~ Timepoint, data=T16_biofilm)
+summary(anova_lm_T16_biofilm) #p=0.805
 
-anova_mpn_T17<-aov(logMPN ~ factorABC, data=T17)
-summary(anova_mpn_T17)
+anova_lm_T17_biofilm<-aov(logMPN ~ Timepoint, data=T17_biofilm)
+summary(anova_lm_T17_biofilm) # 0.0745
 
-anova_mpn_T18<-aov(logMPN ~ factorABC, data=T18)
-summary(anova_mpn_T18)
+anova_lm_T18_biofilm<-aov(logMPN ~ Timepoint, data=T18_biofilm)
+summary(anova_lm_T18_biofilm) #p=0.805
 
-anova_mpn_T19<-aov(logMPN ~ factorABC, data=T19)
-summary(anova_mpn_T19)
+anova_lm_T19_biofilm<-aov(logMPN ~ Timepoint, data=T19_biofilm)
+summary(anova_lm_T19_biofilm) #p=0.345
 
-anova_mpn_T20<-aov(logMPN ~ factorABC, data=T20)
-summary(anova_mpn_T20)
+anova_lm_T20_biofilm<-aov(logMPN ~ Timepoint, data=T20_biofilm)
+summary(anova_lm_T20_biofilm) #p= 0.0175
+
+#Planktonic
+anova_lm_T1_plank<-aov(logMPN ~ Timepoint, data=T1_plank)
+summary(anova_lm_T1_plank) #p=0.00086
+
+anova_lm_T6_plank<-aov(logMPN ~ Timepoint, data=T6_plank)
+summary(anova_lm_T6_plank) #p=03.752e-6
+
+anova_lm_T7_plank<-aov(logMPN ~ Timepoint, data=T7_plank)
+summary(anova_lm_T7_plank) #p=0.00111
+
+anova_lm_T8_plank<-aov(logMPN ~ Timepoint, data=T8_plank)
+summary(anova_lm_T8_plank) #p=0.0188
+
+anova_lm_T9_plank<-aov(logMPN ~ Timepoint, data=T9_plank)
+summary(anova_lm_T9_plank) #p=0.000586
+
+anova_lm_T10_plank<-aov(logMPN ~ Timepoint, data=T10_plank)
+summary(anova_lm_T10_plank) #p=0.00321
+
+anova_lm_T11_plank<-aov(logMPN ~ Timepoint, data=T11_plank)
+summary(anova_lm_T11_plank) #p=0.00277
+
+anova_lm_T12_plank<-aov(logMPN ~ Timepoint, data=T12_plank)
+summary(anova_lm_T12_plank) #p=0.00475
+
+anova_lm_T13_plank<-aov(logMPN ~ Timepoint, data=T13_plank)
+summary(anova_lm_T13_plank) #p= 0.00127
+
+anova_lm_T14_plank<-aov(logMPN ~ Timepoint, data=T14_plank)
+summary(anova_lm_T14_plank) #p=0.0132
+
+anova_lm_T15_plank<-aov(logMPN ~ Timepoint, data=T15_plank)
+summary(anova_lm_T15_plank) #p=0.0021
+
+anova_lm_T16_plank<-aov(logMPN ~ Timepoint, data=T16_plank)
+summary(anova_lm_T16_plank) #p=2.47e-5
+
+anova_lm_T17_plank<-aov(logMPN ~ Timepoint, data=T17_plank)
+summary(anova_lm_T17_plank) #p=0.00368
+
+anova_lm_T18_plank<-aov(logMPN ~ Timepoint, data=T18_plank)
+summary(anova_lm_T18_plank) #p=0.00744
+
+anova_lm_T19_plank<-aov(logMPN ~ Timepoint, data=T19_plank)
+summary(anova_lm_T19_plank) #p=0.02
+
+anova_lm_T20_plank<-aov(logMPN ~ Timepoint, data=T20_plank)
+summary(anova_lm_T20_plank) #p=0.124
 
 #tukey test
-tukey_mpn_T1<-HSD.test(anova_mpn_T1, trt="factorABC") 
-tukey_mpn_T1
+#Biofilm
+tukey_lm_T1_biofilm<-HSD.test(anova_lm_T1_biofilm, trt="Timepoint") 
+tukey_lm_T1_biofilm
 
-tukey_mpn_T6<-HSD.test(anova_mpn_T6, trt="factorABC") 
-tukey_mpn_T6
+tukey_lm_T6_biofilm<-HSD.test(anova_lm_T6_biofilm, trt="Timepoint") 
+tukey_lm_T6_biofilm
 
-tukey_mpn_T7<-HSD.test(anova_mpn_T7, trt="factorABC") 
-tukey_mpn_T7
+tukey_lm_T7_biofilm<-HSD.test(anova_lm_T7_biofilm, trt="Timepoint") 
+tukey_lm_T7_biofilm
 
-tukey_mpn_T8<-HSD.test(anova_mpn_T8, trt="factorABC") 
-tukey_mpn_T8
+tukey_lm_T8_biofilm<-HSD.test(anova_lm_T8_biofilm, trt="Timepoint") 
+tukey_lm_T8_biofilm
 
-tukey_mpn_T9<-HSD.test(anova_mpn_T9, trt="factorABC") 
-tukey_mpn_T9
+tukey_lm_T9_biofilm<-HSD.test(anova_lm_T9_biofilm, trt="Timepoint") 
+tukey_lm_T9_biofilm
 
-tukey_mpn_T1<-HSD.test(anova_mpn_T1, trt="factorABC") 
-tukey_mpn_T1
+tukey_lm_T10_biofilm<-HSD.test(anova_lm_T10_biofilm, trt="Timepoint") 
+tukey_lm_T10_biofilm
 
-tukey_mpn_T10<-HSD.test(anova_mpn_T10, trt="factorABC") 
-tukey_mpn_T10
+tukey_lm_T11_biofilm<-HSD.test(anova_lm_T11_biofilm, trt="Timepoint") 
+tukey_lm_T11_biofilm
 
-tukey_mpn_T11<-HSD.test(anova_mpn_T11, trt="factorABC") 
-tukey_mpn_T11
+tukey_lm_T12_biofilm<-HSD.test(anova_lm_T12_biofilm, trt="Timepoint") 
+tukey_lm_T12_biofilm
 
-tukey_mpn_T12<-HSD.test(anova_mpn_T12, trt="factorABC") 
-tukey_mpn_T12
+tukey_lm_T13_biofilm<-HSD.test(anova_lm_T13_biofilm, trt="Timepoint") 
+tukey_lm_T13_biofilm
 
-tukey_mpn_T13<-HSD.test(anova_mpn_T13, trt="factorABC") 
-tukey_mpn_T13
+tukey_lm_T14_biofilm<-HSD.test(anova_lm_T14_biofilm, trt="Timepoint") 
+tukey_lm_T14_biofilm
 
-tukey_mpn_T14<-HSD.test(anova_mpn_T14, trt="factorABC") 
-tukey_mpn_T14
+tukey_lm_T15_biofilm<-HSD.test(anova_lm_T15_biofilm, trt="Timepoint") 
+tukey_lm_T15_biofilm
 
-tukey_mpn_T15<-HSD.test(anova_mpn_T15, trt="factorABC") 
-tukey_mpn_T15
+tukey_lm_T16_biofilm<-HSD.test(anova_lm_T16_biofilm, trt="Timepoint") 
+tukey_lm_T16_biofilm
 
-tukey_mpn_T16<-HSD.test(anova_mpn_T16, trt="factorABC") 
-tukey_mpn_T16
+tukey_lm_T17_biofilm<-HSD.test(anova_lm_T17_biofilm, trt="Timepoint") 
+tukey_lm_T17_biofilm
 
-tukey_mpn_T17<-HSD.test(anova_mpn_T17, trt="factorABC") 
-tukey_mpn_T17
+tukey_lm_T18_biofilm<-HSD.test(anova_lm_T18_biofilm, trt="Timepoint") 
+tukey_lm_T18_biofilm
 
-tukey_mpn_T18<-HSD.test(anova_mpn_T18, trt="factorABC") 
-tukey_mpn_T18
+tukey_lm_T19_biofilm<-HSD.test(anova_lm_T19_biofilm, trt="Timepoint") 
+tukey_lm_T19_biofilm
 
-tukey_mpn_T19<-HSD.test(anova_mpn_T19, trt="factorABC") 
-tukey_mpn_T19
+tukey_lm_T20_biofilm<-HSD.test(anova_lm_T20_biofilm, trt="Timepoint") 
+tukey_lm_T20_biofilm
 
-tukey_mpn_T20<-HSD.test(anova_mpn_T20, trt="factorABC") 
-tukey_mpn_T20
+#Planktonic
+tukey_lm_T1_plank<-HSD.test(anova_lm_T1_plank, trt="Timepoint") 
+tukey_lm_T1_plank
 
-tukey_groups_mpn<-bind_rows(tukey_mpn_T1$groups, tukey_mpn_T6$groups,tukey_mpn_T7$groups,tukey_mpn_T8$groups,
-                            tukey_mpn_T9$groups,tukey_mpn_T10$groups,tukey_mpn_T11$groups,tukey_mpn_T12$groups,
-                            tukey_mpn_T13$groups,tukey_mpn_T14$groups,tukey_mpn_T15$groups,tukey_mpn_T16$groups,
-                            tukey_mpn_T17$groups,tukey_mpn_T18$groups,tukey_mpn_T19$groups,tukey_mpn_T20$groups)
+tukey_lm_T6_plank<-HSD.test(anova_lm_T6_plank, trt="Timepoint") 
+tukey_lm_T6_plank
 
-tukey_groups_mpn<-tukey_groups_mpn[ order(row.names(tukey_groups_mpn)), ]
-tukey_groups_mpn$Code<-c(rep("L+F",9),rep("L+M+F",9),rep("L+M",9),rep("L+P",9),rep("L+P+F",9),rep("L+P+M",9),
-                         rep("L+P+M+F",9),rep("L+P+X",9),rep("L+P+X+F",9),rep("L+P+X+M+F",9),
-                         rep("L+P+X+M",9),rep("L+X+F",9),rep("L+X+M",9),rep("L+X+M+F",9),rep("L+X",9),rep("L",9))
-tukey_groups_mpn$Timepoint<-rep(c(0.25,0.5,0.5,0,0,1,1,2,2),16)
-tukey_groups_mpn$Form<-rep(c(rep(c("Planktonic","Biofilm"),4),"Planktonic"),16)
+tukey_lm_T7_plank<-HSD.test(anova_lm_T7_plank, trt="Timepoint") 
+tukey_lm_T7_plank
 
+tukey_lm_T8_plank<-HSD.test(anova_lm_T8_plank, trt="Timepoint") 
+tukey_lm_T8_plank
 
-tukey_means_mpn<-bind_rows(tukey_mpn_T9$means,tukey_mpn_T15$means,tukey_mpn_T8$means,tukey_mpn_T6$means,
-                                tukey_mpn_T12$means,tukey_mpn_T11$means,tukey_mpn_T18$means,tukey_mpn_T10$means,
-                                tukey_mpn_T17$means,tukey_mpn_T20$means,tukey_mpn_T16$means,tukey_mpn_T14$means,
-                                tukey_mpn_T13$means,tukey_mpn_T19$means,tukey_mpn_T7$means,tukey_mpn_T1$means)
+tukey_lm_T9_plank<-HSD.test(anova_lm_T9_plank, trt="Timepoint") 
+tukey_lm_T9_plank
 
-tukey_mpn_sum<-bind_cols(tukey_groups_mpn,tukey_means_mpn)
+tukey_lm_T10_plank<-HSD.test(anova_lm_T10_plank, trt="Timepoint") 
+tukey_lm_T10_plank
 
+tukey_lm_T11_plank<-HSD.test(anova_lm_T11_plank, trt="Timepoint") 
+tukey_lm_T11_plank
 
-#plot mpn results with tukey letters
-mpn_bac_tukey<-ggplot(tukey_mpn_sum, aes(x=Timepoint, y=`logMPN...1`, group=interaction(Form,Code), color=Code, linetype=Form, shape=Form))+
-  geom_point()+geom_line()+facet_wrap(vars(Code))+
-  geom_text(aes(label=groups), position=position_dodge(width=0), vjust=-1)+
-  geom_errorbar(aes(ymin=`logMPN...1`-se, ymax=`logMPN...1`+se), width=.07, linetype=1)+
-  geom_hline(yintercept = 0.9, color="grey80", linetype=2)+
-  scale_x_continuous(limits = c(-0.15,2.5), breaks = c(0,0.5,1,1.5,2,2.5))+
-  scale_y_continuous(limits = c(0,10), breaks = c(0,2,4,6,8,10), minor_breaks = c(1,3,5,7,9))+
-  theme(plot.margin=margin(t=0.5, b=0.5, l=0.5, r=0.5, unit = 'in'))+
-  theme(axis.text = element_text(color='black', size=13), axis.ticks = element_line(color='black')) +
-  theme(axis.title = element_text(size=13,color='black')) +
-  theme(panel.background = element_rect(fill='white', color = NA),
-        plot.background = element_rect(fill = 'white',color = NA), 
-        panel.border = element_rect(color='black',fill = NA,size=1))+
-  #theme(panel.grid.major = element_line(color = "grey50"), panel.grid.minor.y = element_line(color = "grey50"))+
-  theme(strip.background= element_blank(), strip.text = element_text(size=15),
-        panel.border = element_rect(color="black", fill=NA))+
-  theme(legend.position = "bottom")+
-  ylab("log10 MPN/peg biofilms or log 10 MPN/ml planktonic")+xlab("Time (hours)")+
-  ggtitle("L. monocytogenes MPN - Tolerance Both")+theme(plot.title = element_text(hjust = 0.5, face = 'bold'))
-mpn_bac_tukey
-ggsave("Tolerance_MPN_Both_Tukey.png", plot=mpn_bac_tukey, device="png", width=10, height=8, units="in", dpi=600)
-ggsave("Tolerance_MPN_Both_Tukey.svg", plot=mpn_bac_tukey, device="svg", width=10, height=8, units="in", dpi=600)
+tukey_lm_T12_plank<-HSD.test(anova_lm_T12_plank, trt="Timepoint") 
+tukey_lm_T12_plank
 
+tukey_lm_T13_plank<-HSD.test(anova_lm_T13_plank, trt="Timepoint") 
+tukey_lm_T13_plank
+
+tukey_lm_T14_plank<-HSD.test(anova_lm_T14_plank, trt="Timepoint") 
+tukey_lm_T14_plank
+
+tukey_lm_T15_plank<-HSD.test(anova_lm_T15_plank, trt="Timepoint") 
+tukey_lm_T15_plank
+
+tukey_lm_T16_plank<-HSD.test(anova_lm_T16_plank, trt="Timepoint") 
+tukey_lm_T16_plank
+
+tukey_lm_T17_plank<-HSD.test(anova_lm_T17_plank, trt="Timepoint") 
+tukey_lm_T17_plank
+
+tukey_lm_T18_plank<-HSD.test(anova_lm_T18_plank, trt="Timepoint") 
+tukey_lm_T18_plank
+
+tukey_lm_T19_plank<-HSD.test(anova_lm_T19_plank, trt="Timepoint") 
+tukey_lm_T19_plank
+
+tukey_lm_T20_plank<-HSD.test(anova_lm_T20_plank, trt="Timepoint") 
+tukey_lm_T20_plank
+
+# tukey_groups_mpn<-bind_rows(tukey_mpn_T1$groups, tukey_mpn_T6$groups,tukey_mpn_T7$groups,tukey_mpn_T8$groups,
+#                             tukey_mpn_T9$groups,tukey_mpn_T10$groups,tukey_mpn_T11$groups,tukey_mpn_T12$groups,
+#                             tukey_mpn_T13$groups,tukey_mpn_T14$groups,tukey_mpn_T15$groups,tukey_mpn_T16$groups,
+#                             tukey_mpn_T17$groups,tukey_mpn_T18$groups,tukey_mpn_T19$groups,tukey_mpn_T20$groups)
+# 
+# tukey_groups_mpn<-tukey_groups_mpn[ order(row.names(tukey_groups_mpn)), ]
+# tukey_groups_mpn$Code<-c(rep("L+F",9),rep("L+M+F",9),rep("L+M",9),rep("L+P",9),rep("L+P+F",9),rep("L+P+M",9),
+#                          rep("L+P+M+F",9),rep("L+P+X",9),rep("L+P+X+F",9),rep("L+P+X+M+F",9),
+#                          rep("L+P+X+M",9),rep("L+X+F",9),rep("L+X+M",9),rep("L+X+M+F",9),rep("L+X",9),rep("L",9))
+# tukey_groups_mpn$Timepoint<-rep(c(0.25,0.5,0.5,0,0,1,1,2,2),16)
+# tukey_groups_mpn$Form<-rep(c(rep(c("Planktonic","Biofilm"),4),"Planktonic"),16)
+# 
+# 
+# tukey_means_mpn<-bind_rows(tukey_mpn_T9$means,tukey_mpn_T15$means,tukey_mpn_T8$means,tukey_mpn_T6$means,
+#                                 tukey_mpn_T12$means,tukey_mpn_T11$means,tukey_mpn_T18$means,tukey_mpn_T10$means,
+#                                 tukey_mpn_T17$means,tukey_mpn_T20$means,tukey_mpn_T16$means,tukey_mpn_T14$means,
+#                                 tukey_mpn_T13$means,tukey_mpn_T19$means,tukey_mpn_T7$means,tukey_mpn_T1$means)
+# 
+# tukey_mpn_sum<-bind_cols(tukey_groups_mpn,tukey_means_mpn)
+# 
+# 
+# #plot mpn results with tukey letters
+# mpn_bac_tukey<-ggplot(tukey_mpn_sum, aes(x=Timepoint, y=`logMPN...1`, group=interaction(Form,Code), color=Code, linetype=Form, shape=Form))+
+#   geom_point()+geom_line()+facet_wrap(vars(Code))+
+#   geom_text(aes(label=groups), position=position_dodge(width=0), vjust=-1)+
+#   geom_errorbar(aes(ymin=`logMPN...1`-se, ymax=`logMPN...1`+se), width=.07, linetype=1)+
+#   geom_hline(yintercept = 0.9, color="grey80", linetype=2)+
+#   scale_x_continuous(limits = c(-0.15,2.5), breaks = c(0,0.5,1,1.5,2,2.5))+
+#   scale_y_continuous(limits = c(0,10), breaks = c(0,2,4,6,8,10), minor_breaks = c(1,3,5,7,9))+
+#   theme(plot.margin=margin(t=0.5, b=0.5, l=0.5, r=0.5, unit = 'in'))+
+#   theme(axis.text = element_text(color='black', size=13), axis.ticks = element_line(color='black')) +
+#   theme(axis.title = element_text(size=13,color='black')) +
+#   theme(panel.background = element_rect(fill='white', color = NA),
+#         plot.background = element_rect(fill = 'white',color = NA), 
+#         panel.border = element_rect(color='black',fill = NA,size=1))+
+#   #theme(panel.grid.major = element_line(color = "grey50"), panel.grid.minor.y = element_line(color = "grey50"))+
+#   theme(strip.background= element_blank(), strip.text = element_text(size=15),
+#         panel.border = element_rect(color="black", fill=NA))+
+#   theme(legend.position = "bottom")+
+#   ylab("log10 MPN/peg biofilms or log 10 MPN/ml planktonic")+xlab("Time (hours)")+
+#   ggtitle("L. monocytogenes MPN - Tolerance Both")+theme(plot.title = element_text(hjust = 0.5, face = 'bold'))
+# mpn_bac_tukey
+# ggsave("Tolerance_MPN_Both_Tukey.png", plot=mpn_bac_tukey, device="png", width=10, height=8, units="in", dpi=600)
+# ggsave("Tolerance_MPN_Both_Tukey.svg", plot=mpn_bac_tukey, device="svg", width=10, height=8, units="in", dpi=600)
+# 
 
 #### Model death curves ####
 
